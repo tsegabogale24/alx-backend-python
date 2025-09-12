@@ -16,7 +16,7 @@ def main():
         # 3️⃣ Create table
         seed.create_table(connection)
         # 4️⃣ Insert data from CSV
-        seed.insert_data(connection, 'user_data.csv')
+        seed.insert_data(connection, './user_data.csv')
 
         # 5️⃣ Stream rows using generator
         print("\nStreaming 5 rows from user_data:")
