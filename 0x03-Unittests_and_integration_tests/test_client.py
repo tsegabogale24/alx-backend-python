@@ -97,9 +97,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up class-level fixtures and patch requests.get"""
-        patcher = patch("client.requests.get")
-        cls.mock_get = patcher.start()
-        cls.get_patcher = patcher  # satisfies ALX self.get_patcher check
+        cls.get_patcher = patch("client.requests.get")
+        cls.mock_get = cls.get_patcher.start()
 
         def side_effect(url, *args, **kwargs):
             if url.endswith("/orgs/google"):
@@ -127,9 +126,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     def test_public_repos_with_license(self):
         """Task 9: Integration test for public_repos filtered by license"""
         client = GithubOrgClient("google")
-        result = client.public_repos(
-            license="apache-2.0"
-        )
+        result = client.public_repos(license="apache-2.0")
         self.assertEqual(result, self.apache2_repos)
 
 
