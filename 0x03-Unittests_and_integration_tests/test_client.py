@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Unit tests for the GithubOrgClient class using unittest, parameterized, and patch.
+Unit tests for the GithubOrgClient class using unittest, parameterized,
+and patch.
 
 Includes tests:
 - test_org
