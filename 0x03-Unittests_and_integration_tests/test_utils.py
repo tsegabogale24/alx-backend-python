@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""
+Unit and integration tests for the ALX Backend Python 0x03 project.
+
+This module contains:
+- TestAccessNestedMap: tests for access_nested_map function
+- TestGetJson: tests for get_json function (with mocked HTTP calls)
+- TestMemoize: tests for memoize decorator
+"""
+
 import unittest
 from parameterized import parameterized
 from unittest.mock import patch, Mock
@@ -35,7 +44,9 @@ class TestGetJson(unittest.TestCase):
         ("http://example.com", {"payload": True}),
         ("http://holberton.io", {"payload": False}),
     ])
-    @patch("utils.requests.get")
+    @patch(
+        "utils.requests.get"
+    )
     def test_get_json(self, test_url, test_payload, mock_get):
         """Test that get_json returns expected payload from mocked HTTP call"""
         mock_response = Mock()
@@ -55,6 +66,8 @@ class TestMemoize(unittest.TestCase):
         """Test that memoize caches the result of a method"""
 
         class TestClass:
+            """Test class with a method and memoized property"""
+
             def a_method(self):
                 return 42
 
@@ -64,13 +77,11 @@ class TestMemoize(unittest.TestCase):
 
         with patch.object(TestClass, "a_method", return_value=42) as mock_method:
             obj = TestClass()
-            # Call twice
             result1 = obj.a_property
             result2 = obj.a_property
 
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
-            # a_method should only be called once due to caching
             mock_method.assert_called_once()
 
 
