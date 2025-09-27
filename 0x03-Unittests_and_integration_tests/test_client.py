@@ -2,7 +2,7 @@
 """
 Unit tests for the GithubOrgClient class using unittest, parameterized, and patch.
 
-Includes the following tests:
+Includes tests:
 - test_org
 - test_public_repos_url
 - test_public_repos
@@ -65,7 +65,9 @@ class TestGithubOrgClient(unittest.TestCase):
             "_public_repos_url",
             new_callable=PropertyMock
         ) as mock_url:
-            mock_url.return_value = "https://api.github.com/orgs/test_org/repos"
+            mock_url.return_value = (
+                "https://api.github.com/orgs/test_org/repos"
+            )
             result = client.public_repos()
 
             # Verify the list of repo names
