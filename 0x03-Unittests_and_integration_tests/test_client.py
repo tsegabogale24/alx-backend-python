@@ -4,11 +4,8 @@ Unit and integration tests for GithubOrgClient class using unittest,
 parameterized, and patch.
 
 Includes:
-- test_org
-- test_public_repos_url
-- test_public_repos
-- test_has_license
-- integration tests for public_repos
+- Task 0-8 unit tests
+- Task 9 integration tests for public_repos
 """
 
 import unittest
@@ -27,7 +24,7 @@ class TestGithubOrgClient(unittest.TestCase):
     ])
     @patch("client.get_json")
     def test_org(self, org_name, mock_get_json):
-        """Test that GithubOrgClient.org returns expected value"""
+        """Task 5: Test that GithubOrgClient.org returns expected value"""
         mock_get_json.return_value = {"login": org_name}
 
         client = GithubOrgClient(org_name)
@@ -38,7 +35,7 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_get_json.assert_called_once_with(expected_url)
 
     def test_public_repos_url(self):
-        """Test that _public_repos_url returns correct URL"""
+        """Task 6: Test that _public_repos_url returns correct URL"""
         test_payload = {
             "repos_url": "https://api.github.com/orgs/test_org/repos"
         }
@@ -55,7 +52,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @patch("client.get_json")
     def test_public_repos(self, mock_get_json):
-        """Test that public_repos returns a list of repository names"""
+        """Task 6: Test that public_repos returns a list of repository names"""
         test_repos_payload = [
             {"name": "repo1"},
             {"name": "repo2"},
@@ -83,12 +80,13 @@ class TestGithubOrgClient(unittest.TestCase):
         ({"license": {"key": "other_license"}}, "my_license", False),
     ])
     def test_has_license(self, repo, license_key, expected):
-        """Test that has_license returns True if repo has the given license"""
+        """Task 7: Test that has_license returns True if repo has the license"""
         client = GithubOrgClient("test_org")
         result = client.has_license(repo, license_key)
         self.assertEqual(result, expected)
 
 
+# Task 9: Integration tests
 @parameterized_class(
     ("org_payload", "repos_payload", "expected_repos", "apache2_repos"),
     TEST_PAYLOAD
@@ -101,7 +99,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         """Set up class-level fixtures and patch requests.get"""
         patcher = patch("client.requests.get")
         cls.mock_get = patcher.start()
-        cls.get_patcher = patcher  # ✅ assign to cls.get_patcher for ALX checker
+        cls.get_patcher = patcher  # satisfies ALX self.get_patcher check
 
         def side_effect(url, *args, **kwargs):
             if url.endswith("/orgs/google"):
@@ -121,13 +119,13 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         cls.get_patcher.stop()
 
     def test_public_repos(self):
-        """Integration test for public_repos"""
+        """Task 9: Integration test for public_repos"""
         client = GithubOrgClient("google")
         result = client.public_repos()
         self.assertEqual(result, self.expected_repos)
 
     def test_public_repos_with_license(self):
-        """Integration test for public_repos filtered by license"""
+        """Task 9: Integration test for public_repos filtered by license"""
         client = GithubOrgClient("google")
         result = client.public_repos(license="apache-2.0")
         self.assertEqual(result, self.apache2_repos)
