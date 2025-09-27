@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
 Unit tests for the GithubOrgClient class using unittest, parameterized, and patch.
+
+Tests include:
+- test_org
+- test_public_repos_url
+- test_public_repos
 """
 
 import unittest
@@ -30,10 +35,14 @@ class TestGithubOrgClient(unittest.TestCase):
 
     def test_public_repos_url(self):
         """Test that _public_repos_url returns correct URL from org payload"""
-        test_payload = {"repos_url": "https://api.github.com/orgs/test_org/repos"}
+        test_payload = {
+            "repos_url": "https://api.github.com/orgs/test_org/repos"
+        }
 
         client = GithubOrgClient("test_org")
-        with patch.object(GithubOrgClient, "org", new_callable=PropertyMock) as mock_org:
+        with patch.object(
+            GithubOrgClient, "org", new_callable=PropertyMock
+        ) as mock_org:
             mock_org.return_value = test_payload
             result = client._public_repos_url
             self.assertEqual(result, test_payload["repos_url"])
