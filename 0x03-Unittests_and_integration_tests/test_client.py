@@ -2,7 +2,7 @@
 """
 Unit tests for the GithubOrgClient class using unittest, parameterized, and patch.
 
-Tests include:
+Includes the following tests:
 - test_org
 - test_public_repos_url
 - test_public_repos
@@ -41,7 +41,9 @@ class TestGithubOrgClient(unittest.TestCase):
 
         client = GithubOrgClient("test_org")
         with patch.object(
-            GithubOrgClient, "org", new_callable=PropertyMock
+            GithubOrgClient,
+            "org",
+            new_callable=PropertyMock
         ) as mock_org:
             mock_org.return_value = test_payload
             result = client._public_repos_url
