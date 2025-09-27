@@ -52,7 +52,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @patch("client.get_json")
     def test_public_repos(self, mock_get_json):
-        """Task 6: Test that public_repos returns a list of repository names"""
+        """Task 6: Test that public_repos returns list of repo names"""
         test_repos_payload = [
             {"name": "repo1"},
             {"name": "repo2"},
@@ -80,7 +80,7 @@ class TestGithubOrgClient(unittest.TestCase):
         ({"license": {"key": "other_license"}}, "my_license", False),
     ])
     def test_has_license(self, repo, license_key, expected):
-        """Task 7: Test that has_license returns True if repo has the license"""
+        """Task 7: Test has_license returns True if repo has license"""
         client = GithubOrgClient("test_org")
         result = client.has_license(repo, license_key)
         self.assertEqual(result, expected)
@@ -101,7 +101,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         cls.mock_get = cls.get_patcher.start()
 
         def side_effect(url, *args, **kwargs):
-            if url.endswith("/orgs/google"):
+            if "/orgs/" in url and not url.endswith("/repos"):
                 mock_resp = unittest.mock.Mock()
                 mock_resp.json.return_value = cls.org_payload
                 return mock_resp
@@ -115,7 +115,6 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Stop patcher after tests"""
         cls.get_patcher.stop()
 
     def test_public_repos(self):
@@ -127,7 +126,9 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     def test_public_repos_with_license(self):
         """Task 9: Integration test for public_repos filtered by license"""
         client = GithubOrgClient("google")
-        result = client.public_repos(license="apache-2.0")
+        result = client.public_repos(
+            license="apache-2.0"
+        )
         self.assertEqual(result, self.apache2_repos)
 
 
