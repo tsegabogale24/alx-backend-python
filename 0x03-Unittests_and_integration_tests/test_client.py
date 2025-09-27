@@ -2,10 +2,6 @@
 """
 Unit and integration tests for GithubOrgClient class using unittest,
 parameterized, and patch.
-
-Includes:
-- Task 0-8 unit tests
-- Task 9 integration tests for public_repos
 """
 
 import unittest
@@ -24,22 +20,17 @@ class TestGithubOrgClient(unittest.TestCase):
     ])
     @patch("client.get_json")
     def test_org(self, org_name, mock_get_json):
-        """Task 5: Test that GithubOrgClient.org returns expected value"""
         mock_get_json.return_value = {"login": org_name}
-
         client = GithubOrgClient(org_name)
         result = client.org
-
         expected_url = f"https://api.github.com/orgs/{org_name}"
         self.assertEqual(result, {"login": org_name})
         mock_get_json.assert_called_once_with(expected_url)
 
     def test_public_repos_url(self):
-        """Task 6: Test that _public_repos_url returns correct URL"""
         test_payload = {
             "repos_url": "https://api.github.com/orgs/test_org/repos"
         }
-
         client = GithubOrgClient("test_org")
         with patch.object(
             GithubOrgClient,
@@ -52,15 +43,9 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @patch("client.get_json")
     def test_public_repos(self, mock_get_json):
-        """Task 6: Test that public_repos returns list of repo names"""
-        test_repos_payload = [
-            {"name": "repo1"},
-            {"name": "repo2"},
-        ]
+        test_repos_payload = [{"name": "repo1"}, {"name": "repo2"}]
         mock_get_json.return_value = test_repos_payload
-
         client = GithubOrgClient("test_org")
-
         with patch.object(
             GithubOrgClient,
             "_public_repos_url",
@@ -70,7 +55,6 @@ class TestGithubOrgClient(unittest.TestCase):
                 "https://api.github.com/orgs/test_org/repos"
             )
             result = client.public_repos()
-
             self.assertEqual(result, ["repo1", "repo2"])
             mock_url.assert_called_once()
             mock_get_json.assert_called_once_with(mock_url.return_value)
@@ -80,13 +64,11 @@ class TestGithubOrgClient(unittest.TestCase):
         ({"license": {"key": "other_license"}}, "my_license", False),
     ])
     def test_has_license(self, repo, license_key, expected):
-        """Task 7: Test has_license returns True if repo has license"""
         client = GithubOrgClient("test_org")
         result = client.has_license(repo, license_key)
         self.assertEqual(result, expected)
 
 
-# Task 9: Integration tests
 @parameterized_class(
     ("org_payload", "repos_payload", "expected_repos", "apache2_repos"),
     TEST_PAYLOAD
@@ -96,9 +78,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Set up class-level fixtures and patch requests.get"""
         cls.get_patcher = patch("client.requests.get")
-        cls.mock_get = cls.get_patcher.start()
+        mock_get = cls.get_patcher.start()
 
         def side_effect(url, *args, **kwargs):
             if "/orgs/" in url and not url.endswith("/repos"):
@@ -111,24 +92,20 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
                 return mock_resp
             return unittest.mock.Mock(json=lambda: {})
 
-        cls.mock_get.side_effect = side_effect
+        mock_get.side_effect = side_effect
 
     @classmethod
     def tearDownClass(cls):
         cls.get_patcher.stop()
 
     def test_public_repos(self):
-        """Task 9: Integration test for public_repos"""
         client = GithubOrgClient("google")
         result = client.public_repos()
         self.assertEqual(result, self.expected_repos)
 
     def test_public_repos_with_license(self):
-        """Task 9: Integration test for public_repos filtered by license"""
         client = GithubOrgClient("google")
-        result = client.public_repos(
-            license="apache-2.0"
-        )
+        result = client.public_repos(license="apache-2.0")
         self.assertEqual(result, self.apache2_repos)
 
 
