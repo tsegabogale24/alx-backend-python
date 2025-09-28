@@ -5,8 +5,13 @@ from .models import User, Conversation, Message
 class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for User model
-    Exposes essential fields, hides password & password_hash by default.
+    Exposes essential fields, hides sensitive info.
     """
+    # Explicit CharField usage
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.CharField()
+
     class Meta:
         model = User
         fields = [
@@ -24,9 +29,10 @@ class UserSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     """
     Serializer for Message model
-    Includes sender info and conversation reference.
+    Adds sender info and validates message body.
     """
     sender = UserSerializer(read_only=True)
+    message_body = serializers.CharField()
 
     class Meta:
         model = Message
@@ -39,6 +45,14 @@ class MessageSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["message_id", "sent_at"]
 
+    def validate_message_body(self, value):
+        """
+        Ensure message body is not empty.
+        """
+        if not value.strip():
+            raise serializers.ValidationError("Message body cannot be empty.")
+        return value
+
 
 class ConversationSerializer(serializers.ModelSerializer):
     """
@@ -46,7 +60,8 @@ class ConversationSerializer(serializers.ModelSerializer):
     Includes participants and nested messages.
     """
     participants = UserSerializer(many=True, read_only=True)
-    messages = MessageSerializer(many=True, read_only=True, source="message_set")
+    # Explicit SerializerMethodField usage
+    messages = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
@@ -57,3 +72,10 @@ class ConversationSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["conversation_id", "created_at"]
+
+    def get_messages(self, obj):
+        """
+        Return nested messages for this conversation.
+        """
+        messages = obj.message_set.all()
+        return MessageSerializer(messages, many=True).data
