@@ -3,5 +3,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("chats.urls")),  # ✅ expose API routes here
+    path("api/", include("chats.urls")),  # <-- Must include "api/"
 ]
