@@ -1,7 +1,12 @@
-from django.contrib import admin
+from rest_framework.routers import DefaultRouter
 from django.urls import path, include
+from .views import ConversationViewSet, MessageViewSet
+
+# DRF router automatically generates CRUD endpoints for our ViewSets
+router = DefaultRouter()
+router.register(r"conversations", ConversationViewSet, basename="conversation")
+router.register(r"messages", MessageViewSet, basename="message")
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api/", include("chats.urls")),  # ✅ expose API routes here
+    path("", include(router.urls)),
 ]
