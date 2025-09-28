@@ -8,7 +8,7 @@ Django models for messaging app:
 
 import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission
 
 
 class User(AbstractUser):
@@ -34,7 +34,18 @@ class User(AbstractUser):
 
     # Explicitly add password_hash field (in addition to AbstractUser.password)
     password_hash = models.CharField(max_length=255, null=False, blank=False)
-
+    groups = models.ManyToManyField(
+        Group,
+        related_name="chat_user_set",  # avoid clash with auth.User.groups
+        blank=True,
+        help_text='The groups this user belongs to.'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="chat_user_permissions",  # avoid clash with auth.User.user_permissions
+        blank=True,
+        help_text='Specific permissions for this user.'
+    )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
 
@@ -42,7 +53,7 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=["email"]),
         ]
-
+    
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
 
