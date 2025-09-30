@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404
 
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
+from .permissions import IsOwner
+from rest_framework.permissions import IsAuthenticated
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -47,6 +49,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["message_body", "sender__username"]
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -61,3 +64,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         )
         output_serializer = self.get_serializer(message)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+
+    def get_queryset(self):
+        # Limit messages to the logged-in user
+        return Message.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
