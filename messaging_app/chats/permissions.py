@@ -1,7 +1,7 @@
 # messaging_app/chats/permissions.py
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import permissions
 
-class IsOwner(BasePermission):
+class IsOwner(permissions.BasePermission):
     """
     Custom permission to only allow users to access their own objects.
     """
