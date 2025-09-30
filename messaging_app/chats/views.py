@@ -18,6 +18,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all().order_by("-created_at")
     serializer_class = ConversationSerializer
     filter_backends = [filters.SearchFilter]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     search_fields = ["participants__username", "participants__email"]
 
     def create(self, request, *args, **kwargs):
@@ -31,6 +32,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
         conversation.participants.set(participants)
         serializer = self.get_serializer(conversation)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+     def get_queryset(self):
+        # Only show conversations where the user is a participant
+        return Conversation.objects.filter(participants=self.request.user)
 
     @action(detail=True, methods=["get"])
     def messages(self, request, pk=None):
@@ -68,7 +72,11 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Limit messages to the logged-in user
-        return Message.objects.filter(user=self.request.user)
+       return Message.objects.filter(conversation__participants=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+         conversation = serializer.validated_data["conversation"]
+        if self.request.user not in conversation.participants.all():
+            raise PermissionDenied("You are not a participant of this conversation.")
+        serializer.save(sender=self.request.user)
+        
