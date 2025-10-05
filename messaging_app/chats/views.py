@@ -2,24 +2,27 @@ from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
-from .permissions import IsOwner
-from rest_framework.permissions import IsAuthenticated
+from .permissions import IsOwner, IsParticipantOfConversation
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Conversations.
-    Supports listing, retrieving, creating conversations,
-    and retrieving messages within a conversation.
+    Users only see conversations they are participants of.
     """
-    queryset = Conversation.objects.all().order_by("-created_at")
     serializer_class = ConversationSerializer
     filter_backends = [filters.SearchFilter]
-    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    permission_classes = [IsAuthenticated]
     search_fields = ["participants__username", "participants__email"]
+
+    def get_queryset(self):
+        # Only show conversations where the user is a participant
+        return Conversation.objects.filter(participants=self.request.user)
 
     def create(self, request, *args, **kwargs):
         participants = request.data.get("participants")
@@ -32,9 +35,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
         conversation.participants.set(participants)
         serializer = self.get_serializer(conversation)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-     def get_queryset(self):
-        # Only show conversations where the user is a participant
-        return Conversation.objects.filter(participants=self.request.user)
 
     @action(detail=True, methods=["get"])
     def messages(self, request, pk=None):
@@ -47,36 +47,20 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Messages.
-    Supports listing and creating messages inside conversations.
+    Participants of a conversation can view/send messages.
+    Only message owners can update/delete.
     """
-    queryset = Message.objects.all().order_by("-sent_at")
     serializer_class = MessageSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["message_body", "sender__username"]
-    permission_classes = [IsAuthenticated, IsOwner]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        conversation = get_object_or_404(
-            Conversation, pk=serializer.validated_data["conversation"].conversation_id
-        )
-        message = Message.objects.create(
-            conversation=conversation,
-            sender=serializer.validated_data["sender"],
-            message_body=serializer.validated_data["message_body"],
-        )
-        output_serializer = self.get_serializer(message)
-        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
-
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
 
     def get_queryset(self):
-        # Limit messages to the logged-in user
-       return Message.objects.filter(conversation__participants=self.request.user)
+        # Limit messages to conversations where the user is a participant
+        return Message.objects.filter(conversation__participants=self.request.user)
 
     def perform_create(self, serializer):
-         conversation = serializer.validated_data["conversation"]
+        conversation = serializer.validated_data["conversation"]
         if self.request.user not in conversation.participants.all():
             raise PermissionDenied("You are not a participant of this conversation.")
         serializer.save(sender=self.request.user)
-        
