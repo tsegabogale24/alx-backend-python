@@ -17,15 +17,22 @@ class MessageViewSet(viewsets.ModelViewSet):
     Only message owners can update/delete.
     """
     serializer_class = MessageSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["message_body", "sender__username"]
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    queryset = Message.objects.all().order_by("-sent_at")
 
-    def get_queryset(self):
-        # Only show messages where the user is a participant
-        return Message.objects.filter(conversation__participants=self.request.user)
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = MessageFilter
+    search_fields = ["message_body", "sender__username"]
+    ordering_fields = ["sent_at"]
 
-    def create(self, request, *args, **kwargs):
+     pagination_class = MessagePagination  # <-- pagination enabled
+
+
+      def get_queryset(self):
+        # Only messages from conversations the user participates in
+        return Message.objects.filter(conversation__participants=self.request.user).order_by("-sent_at")
+          
+      def create(self, request, *args, **kwargs):
         conversation_id = request.data.get("conversation_id")  # <-- explicit use
         if not conversation_id:
             return Response(
