@@ -54,8 +54,8 @@ MIDDLEWARE = [
     'chats.middleware.RequestLoggingMiddleware',  # 
 ]
 
+ROOT_URLCONF = 'messaging.urls'
 
-ROOT_URLCONF = 'messaging_app.urls'
 
 TEMPLATES = [
     {
@@ -72,8 +72,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'messaging_app.wsgi.application'
 
+WSGI_APPLICATION = 'messaging.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
